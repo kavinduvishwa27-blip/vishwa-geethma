@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Invitation Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,400&family=Inter:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --cream:#fdf6ec;--gold:#b8976a;--gold-dark:#8a6f4a;--gold-light:#d4b896;
+  --text:#3a2e22;--muted:#7a6a58;--white:#fffdf9;
+  --bg:#f5f0e8;--panel:#fffdf9;--border:rgba(184,151,106,.3);
+  --red:#c0392b;--green:#2e7d32;
+}
+body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-size:14px;min-height:100vh}
+
+/* ── LOGIN SCREEN ── */
+#login-screen{
+  min-height:100vh;display:flex;align-items:center;justify-content:center;
+  background:var(--cream);
+  background-image:radial-gradient(ellipse 60% 40% at 50% 0%,rgba(184,151,106,.15) 0%,transparent 70%);
+}
+.login-box{
+  background:var(--white);border:1px solid var(--border);border-radius:8px;
+  padding:3rem 2.5rem;max-width:380px;width:100%;text-align:center;
+}
+.login-box h1{
+  font-family:'Cormorant Garamond',serif;font-size:2rem;font-weight:300;
+  color:var(--text);margin-bottom:.3rem;
+}
+.login-box .sub{font-family:'Cinzel',serif;font-size:.62rem;letter-spacing:.3em;color:var(--gold);margin-bottom:2rem;text-transform:uppercase}
+.login-box input{
+  width:100%;border:1px solid var(--border);background:var(--cream);color:var(--text);
+  font-size:1rem;padding:.85rem 1rem;border-radius:4px;outline:none;
+  font-family:'Inter',sans-serif;margin-bottom:1rem;letter-spacing:.1em;
+  transition:border-color .2s;
+}
+.login-box input:focus{border-color:var(--gold)}
+.btn{
+  display:inline-block;font-family:'Cinzel',serif;font-size:.68rem;letter-spacing:.22em;
+  text-transform:uppercase;color:#fff;background:var(--gold);border:none;
+  padding:.9rem 2rem;border-radius:4px;cursor:pointer;width:100%;
+  transition:background .2s;
+}
+.btn:hover{background:var(--gold-dark)}
+.login-error{color:var(--red);font-size:.82rem;margin-top:.8rem;min-height:1.2rem}
+
+/* ── ADMIN LAYOUT ── */
+#admin-screen{display:none}
+.admin-header{
+  background:var(--text);color:var(--gold-light);
+  padding:1rem 2rem;display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;z-index:50;
+}
+.admin-header h1{font-family:'Cinzel',serif;font-size:.85rem;letter-spacing:.2em}
+.admin-header .hbtns{display:flex;gap:.7rem}
+.hbtn{
+  font-family:'Cinzel',serif;font-size:.62rem;letter-spacing:.15em;text-transform:uppercase;
+  padding:.5rem 1.1rem;border-radius:3px;cursor:pointer;border:1px solid;transition:all .2s;
+}
+.hbtn-preview{color:var(--gold-light);border-color:rgba(212,184,150,.4);background:transparent}
+.hbtn-preview:hover{background:rgba(212,184,150,.1)}
+.hbtn-save{color:var(--text);border-color:var(--gold);background:var(--gold)}
+.hbtn-save:hover{background:var(--gold-dark);border-color:var(--gold-dark)}
+.hbtn-logout{color:#aaa;border-color:rgba(255,255,255,.15);background:transparent;font-size:.58rem}
+.hbtn-logout:hover{color:#fff;border-color:rgba(255,255,255,.3)}
+
+.admin-body{max-width:900px;margin:0 auto;padding:2rem}
+.save-toast{
+  position:fixed;bottom:2rem;right:2rem;background:var(--green);color:#fff;
+  font-family:'Cinzel',serif;font-size:.65rem;letter-spacing:.15em;
+  padding:.8rem 1.5rem;border-radius:4px;opacity:0;pointer-events:none;
+  transition:opacity .3s;z-index:200;
+}
+.save-toast.show{opacity:1}
+
+/* ── CARDS ── */
+.card{
+  background:var(--panel);border:1px solid var(--border);border-radius:8px;
+  padding:1.8rem;margin-bottom:1.5rem;
+}
+.card-title{
+  font-family:'Cinzel',serif;font-size:.7rem;letter-spacing:.22em;text-transform:uppercase;
+  color:var(--gold);margin-bottom:1.2rem;padding-bottom:.7rem;
+  border-bottom:1px solid var(--border);
+}
+.field{margin-bottom:1.1rem}
+.field:last-child{margin-bottom:0}
+.field label{
+  display:block;font-family:'Inter',sans-serif;font-weight:500;font-size:.78rem;
+  color:var(--muted);margin-bottom:.35rem;
+}
+.field input,.field textarea,.field select{
+  width:100%;border:1px solid var(--border);background:var(--cream);color:var(--text);
+  font-family:'Inter',sans-serif;font-size:.88rem;padding:.65rem .9rem;border-radius:4px;
+  outline:none;transition:border-color .2s;
+}
+.field input:focus,.field textarea:focus,.field select:focus{border-color:var(--gold)}
+.field textarea{resize:vertical;min-height:80px;line-height:1.6}
+.field .hint{font-size:.72rem;color:var(--muted);margin-top:.3rem;opacity:.8}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+@media(max-width:540px){.row2{grid-template-columns:1fr}}
+
+/* ── SCHEDULE EDITOR ── */
+.sched-item{
+  display:grid;grid-template-columns:80px 1fr 1fr auto;gap:.6rem;
+  align-items:start;margin-bottom:.7rem;background:var(--cream);
+  border:1px solid var(--border);border-radius:5px;padding:.8rem;
+}
+@media(max-width:600px){.sched-item{grid-template-columns:1fr 1fr;}}
+.sched-item input{
+  border:1px solid var(--border);background:var(--white);color:var(--text);
+  font-family:'Inter',sans-serif;font-size:.82rem;padding:.45rem .6rem;border-radius:3px;
+  outline:none;width:100%;transition:border-color .2s;
+}
+.sched-item input:focus{border-color:var(--gold)}
+.btn-del{
+  background:none;border:1px solid rgba(192,57,43,.3);color:var(--red);
+  border-radius:3px;padding:.4rem .7rem;cursor:pointer;font-size:.8rem;
+  line-height:1;white-space:nowrap;transition:all .2s;
+}
+.btn-del:hover{background:rgba(192,57,43,.08)}
+.btn-add{
+  margin-top:.5rem;background:none;border:1px dashed var(--gold-light);color:var(--gold-dark);
+  font-family:'Cinzel',serif;font-size:.62rem;letter-spacing:.15em;text-transform:uppercase;
+  padding:.6rem 1.2rem;border-radius:4px;cursor:pointer;transition:all .2s;
+}
+.btn-add:hover{background:rgba(184,151,106,.08);border-color:var(--gold)}
+
+/* ── PASSWORD CHANGE ── */
+.pwd-row{display:grid;grid-template-columns:1fr 1fr auto;gap:.6rem;align-items:end}
+@media(max-width:500px){.pwd-row{grid-template-columns:1fr}}
+.btn-sm{
+  font-family:'Cinzel',serif;font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;
+  background:var(--gold);color:#fff;border:none;padding:.65rem 1rem;border-radius:4px;
+  cursor:pointer;white-space:nowrap;transition:background .2s;
+}
+.btn-sm:hover{background:var(--gold-dark)}
+.pwd-msg{font-size:.78rem;margin-top:.5rem;min-height:1.1rem}
+.pwd-msg.ok{color:var(--green)}.pwd-msg.err{color:var(--red)}
+
+/* section label */
+.section-sep{
+  font-family:'Cinzel',serif;font-size:.62rem;letter-spacing:.25em;color:var(--muted);
+  text-transform:uppercase;margin:2rem 0 1rem;
+}
+</style>
+</head>
+<body>
+
+<!-- ═══ LOGIN ═══ -->
+<div id="login-screen">
+  <div class="login-box">
+    <h1>Admin Panel</h1>
+    <p class="sub">Wedding Invitation Editor</p>
+    <input type="password" id="pwd-input" placeholder="Enter your password" onkeydown="if(event.key==='Enter')doLogin()"/>
+    <button class="btn" onclick="doLogin()">Enter</button>
+    <div class="login-error" id="login-err"></div>
+    <p style="font-size:.72rem;color:var(--muted);margin-top:1.5rem;opacity:.7">Default password: <strong>wedding2025</strong></p>
+  </div>
+</div>
+
+<!-- ═══ ADMIN ═══ -->
+<div id="admin-screen">
+  <div class="admin-header">
+    <h1>✦ Invitation Editor</h1>
+    <div class="hbtns">
+      <button class="hbtn hbtn-preview" onclick="openPreview()">Preview Page</button>
+      <button class="hbtn hbtn-save" onclick="saveAll()">Save Changes</button>
+      <button class="hbtn hbtn-logout" onclick="doLogout()">Log out</button>
+    </div>
+  </div>
+
+  <div class="admin-body">
+
+    <!-- COUPLE -->
+    <div class="card">
+      <div class="card-title">Couple & Headline</div>
+      <div class="row2">
+        <div class="field"><label>Person 1 Name</label><input id="f-name1" type="text" placeholder="e.g. Kaveen"/></div>
+        <div class="field"><label>Person 2 Name</label><input id="f-name2" type="text" placeholder="e.g. Samithri"/></div>
+      </div>
+      <div class="field"><label>Announcement line (above names)</label><input id="f-announce" type="text" placeholder="Together with their families"/></div>
+      <div class="field"><label>Tagline (below names)</label><textarea id="f-tagline" rows="2" placeholder="Request the honour of your presence..."></textarea><div class="hint">Use a new line (Enter) to break into two lines</div></div>
+    </div>
+
+    <!-- DATE & TIME -->
+    <div class="card">
+      <div class="card-title">Date, Time & Countdown</div>
+      <div class="row2">
+        <div class="field"><label>Wedding Date &amp; Time (for countdown)</label><input id="f-weddingDateISO" type="datetime-local"/><div class="hint">This drives the live countdown timer</div></div>
+        <div class="field"><label>Date display text (hero)</label><input id="f-datetext" type="text" placeholder="Saturday · 14th of June · 2025"/></div>
+      </div>
+      <div class="row2">
+        <div class="field"><label>Date card text</label><textarea id="f-date" rows="2" placeholder="Saturday&#10;14 June 2025"></textarea><div class="hint">Use Enter for a new line</div></div>
+        <div class="field"><label>Time card text</label><input id="f-time" type="text" placeholder="6:00 PM"/></div>
+      </div>
+      <div class="field"><label>Doors open sub-text</label><input id="f-doors" type="text" placeholder="Doors open at 5:30 PM"/></div>
+    </div>
+
+    <!-- VENUE -->
+    <div class="card">
+      <div class="card-title">Venue & Dress Code</div>
+      <div class="row2">
+        <div class="field"><label>Venue name</label><textarea id="f-venue" rows="2" placeholder="Grand Ballroom&#10;Hotel Ceylon"></textarea><div class="hint">Use Enter for a new line</div></div>
+        <div class="field"><label>Address</label><input id="f-address" type="text" placeholder="123 Lotus Road, Colombo 3"/></div>
+      </div>
+      <div class="row2">
+        <div class="field"><label>Dress code</label><input id="f-dresscode" type="text" placeholder="Formal Attire"/></div>
+        <div class="field"><label>Dress code sub-text</label><input id="f-dresscodesub" type="text" placeholder="Gold & ivory tones welcome"/></div>
+      </div>
+    </div>
+
+    <!-- STORY -->
+    <div class="card">
+      <div class="card-title">Our Story</div>
+      <div class="field"><label>First paragraph</label><textarea id="f-story1" rows="3"></textarea></div>
+      <div class="field"><label>Second paragraph</label><textarea id="f-story2" rows="3"></textarea></div>
+    </div>
+
+    <!-- SCHEDULE -->
+    <div class="card">
+      <div class="card-title">Schedule / Order of the Day</div>
+      <div id="sched-list"></div>
+      <button class="btn-add" onclick="addScheduleItem()">+ Add Time Slot</button>
+    </div>
+
+    <!-- RSVP & CONTACT -->
+    <div class="card">
+      <div class="card-title">RSVP & Contact</div>
+      <div class="row2">
+        <div class="field"><label>RSVP deadline text</label><input id="f-rsvpdeadline" type="text" placeholder="1st May 2025"/></div>
+        <div class="field"><label>Contact line (footer)</label><input id="f-contact" type="text" placeholder="+94 77 123 4567 · email@example.com"/></div>
+      </div>
+      <div class="field"><label>Footer date display</label><input id="f-footerdate" type="text" placeholder="14 · 06 · 2025"/></div>
+    </div>
+
+    <!-- CHANGE PASSWORD -->
+    <div class="card">
+      <div class="card-title">Change Admin Password</div>
+      <div class="pwd-row">
+        <div class="field" style="margin:0"><label>New Password</label><input id="pwd-new" type="password" placeholder="New password"/></div>
+        <div class="field" style="margin:0"><label>Confirm Password</label><input id="pwd-confirm" type="password" placeholder="Confirm new password"/></div>
+        <button class="btn-sm" onclick="changePassword()">Update</button>
+      </div>
+      <div class="pwd-msg" id="pwd-msg"></div>
+    </div>
+
+  </div><!-- /admin-body -->
+</div><!-- /admin-screen -->
+
+<div class="save-toast" id="save-toast">Changes saved ✓</div>
+
+<script>
+// ─── PASSWORD ─────────────────────────────────────────────────────────
+const DEFAULT_PWD = 'wedding2025';
+function getPassword(){ return localStorage.getItem('invite_admin_pwd') || DEFAULT_PWD; }
+
+function doLogin(){
+  const val = document.getElementById('pwd-input').value;
+  if(val === getPassword()){
+    document.getElementById('login-screen').style.display='none';
+    document.getElementById('admin-screen').style.display='block';
+    loadForm();
+  } else {
+    document.getElementById('login-err').textContent='Incorrect password. Please try again.';
+    document.getElementById('pwd-input').value='';
+  }
+}
+function doLogout(){
+  document.getElementById('admin-screen').style.display='none';
+  document.getElementById('login-screen').style.display='flex';
+  document.getElementById('pwd-input').value='';
+}
+function changePassword(){
+  const np=document.getElementById('pwd-new').value.trim();
+  const cp=document.getElementById('pwd-confirm').value.trim();
+  const msg=document.getElementById('pwd-msg');
+  if(!np){msg.className='pwd-msg err';msg.textContent='Password cannot be empty.';return;}
+  if(np!==cp){msg.className='pwd-msg err';msg.textContent='Passwords do not match.';return;}
+  localStorage.setItem('invite_admin_pwd',np);
+  msg.className='pwd-msg ok';msg.textContent='Password updated successfully.';
+  document.getElementById('pwd-new').value='';
+  document.getElementById('pwd-confirm').value='';
+  setTimeout(()=>msg.textContent='',3000);
+}
+
+// ─── DATA ─────────────────────────────────────────────────────────────
+const DEFAULTS={
+  name1:"Kaveen",name2:"Samithri",
+  announce:"Together with their families",
+  tagline:"Request the honour of your presence\nat their wedding celebration",
+  weddingDateISO:"2025-06-14T18:00:00",
+  datetext:"Saturday · 14th of June · 2025",
+  story1:"What began as a chance encounter blossomed into a love story written across stolen glances, late-night conversations, and the quiet certainty that some souls are meant to find each other.",
+  story2:"After years of growing together, of adventures shared and dreams aligned, the most important question was asked — and answered with a joyful yes.",
+  date:"Saturday\n14 June 2025",time:"6:00 PM",doors:"Doors open at 5:30 PM",
+  venue:"Grand Ballroom\nHotel Ceylon",address:"123 Lotus Road, Colombo 3",
+  dresscode:"Formal Attire",dresscodesub:"Gold & ivory tones welcome",
+  rsvpdeadline:"1st May 2025",contact:"+94 77 123 4567 · wedding@example.lk",
+  footerdate:"14 · 06 · 2025",
+  schedule:[
+    {time:"5:30",title:"Guests Arrive",desc:"Welcome drinks & cocktail hour"},
+    {time:"6:00",title:"Ceremony Begins",desc:"Wedding ceremony in the main hall"},
+    {time:"7:00",title:"Photography",desc:"Group & couple photographs"},
+    {time:"7:30",title:"Reception Dinner",desc:"Seated dinner, speeches & toasts"},
+    {time:"9:00",title:"First Dance",desc:"Dancing & celebrations into the night"},
+    {time:"12:00",title:"Carriages",desc:"End of the evening"}
+  ]
+};
+
+function loadData(){ try{const s=localStorage.getItem('invite_data');return s?{...DEFAULTS,...JSON.parse(s)}:DEFAULTS;}catch(e){return DEFAULTS;} }
+
+const FIELDS=['name1','name2','announce','tagline','weddingDateISO','datetext',
+  'date','time','doors','venue','address','dresscode','dresscodesub',
+  'story1','story2','rsvpdeadline','contact','footerdate'];
+
+function loadForm(){
+  const d=loadData();
+  FIELDS.forEach(k=>{
+    const el=document.getElementById('f-'+k);
+    if(!el)return;
+    el.value = k==='weddingDateISO' ? d[k].replace(' ','T').slice(0,16) : (d[k]||'');
+  });
+  renderScheduleEditor(d.schedule||[]);
+}
+
+function collectForm(){
+  const d={};
+  FIELDS.forEach(k=>{
+    const el=document.getElementById('f-'+k);
+    if(!el)return;
+    d[k]=el.value;
+  });
+  d.schedule=collectSchedule();
+  return d;
+}
+
+function saveAll(){
+  const d=collectForm();
+  localStorage.setItem('invite_data',JSON.stringify(d));
+  const t=document.getElementById('save-toast');
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+function openPreview(){
+  saveAll();
+  window.open('invitation.html','_blank');
+}
+
+// ─── SCHEDULE EDITOR ──────────────────────────────────────────────────
+let scheduleItems=[];
+
+function renderScheduleEditor(items){
+  scheduleItems=[...items];
+  redrawSchedule();
+}
+
+function redrawSchedule(){
+  const el=document.getElementById('sched-list');
+  el.innerHTML=scheduleItems.map((s,i)=>`
+    <div class="sched-item" id="sched-${i}">
+      <input type="text" placeholder="Time" value="${esc(s.time)}" oninput="scheduleItems[${i}].time=this.value"/>
+      <input type="text" placeholder="Event title" value="${esc(s.title)}" oninput="scheduleItems[${i}].title=this.value"/>
+      <input type="text" placeholder="Description" value="${esc(s.desc)}" oninput="scheduleItems[${i}].desc=this.value"/>
+      <button class="btn-del" onclick="removeScheduleItem(${i})">✕</button>
+    </div>`).join('');
+}
+
+function addScheduleItem(){
+  scheduleItems.push({time:'',title:'',desc:''});
+  redrawSchedule();
+}
+function removeScheduleItem(i){
+  scheduleItems.splice(i,1);
+  redrawSchedule();
+}
+function collectSchedule(){
+  return scheduleItems.map(s=>({time:s.time,title:s.title,desc:s.desc}));
+}
+function esc(s){return (s||'').replace(/"/g,'&quot;').replace(/</g,'&lt;');}
+</script>
+</body>
+</html>
